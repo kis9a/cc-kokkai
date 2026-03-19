@@ -1,0 +1,159 @@
+*cc_kokkai.txt*	AI National Diet Debate Simulator
+
+Author:  kis9a
+License: MIT
+
+==============================================================================
+CONTENTS                                              *cc-kokkai-contents*
+
+  Introduction .......................... |cc-kokkai-introduction|
+  Commands .............................. |cc-kokkai-commands|
+  Options ............................... |cc-kokkai-options|
+  Layout ................................ |cc-kokkai-layout|
+  Examples .............................. |cc-kokkai-examples|
+  Requirements .......................... |cc-kokkai-requirements|
+
+==============================================================================
+INTRODUCTION                                      *cc-kokkai-introduction*
+
+cc-kokkai is a Vim plugin that simulates a Japanese National Diet
+(parliament) debate using 3 persistent AI sessions via aistream.vim:
+
+  - Pro  (与党/賛成): argues in favor, parliamentary tone
+  - Con  (野党/反対): argues against, prosecutorial tone
+  - Judge (議長):     summarizes and evaluates each round
+
+Each session retains its conversation context across rounds via
+|AIRun!| follow-up, enabling deeper arguments over time.
+
+==============================================================================
+COMMANDS                                            *cc-kokkai-commands*
+
+                                                              *:Kokkai*
+:Kokkai [flags] {topic}
+	Start a debate on {topic}.
+
+	Flags:
+	  -r {N}            Number of debate rounds (overrides default)
+	  -pro {prompt}     Custom prompt for the pro side
+	  -con {prompt}     Custom prompt for the con side
+	  -judge {prompt}   Custom prompt for the judge
+
+	The text given to -pro/-con/-judge is inserted directly into the
+	system prompt as-is. You can specify anything: personas, speaking
+	style, constraints, output format, etc.
+
+	Use quotes for multi-word values: >
+	  :Kokkai -pro "関西弁の熱血議員" -con "冷静な学者" 猫vs犬
+	  :Kokkai -pro "必ず箇条書きで論点を3つ挙げること" 消費税廃止
+	  :Kokkai -judge "論理性・具体性・説得力を各10点で採点せよ" AI是非
+<
+                                                          *:KokkaiStop*
+:KokkaiStop
+	Stop the current debate.
+
+                                                        *:KokkaiStatus*
+:KokkaiStatus
+	Show the current round, total rounds, and topic.
+
+==============================================================================
+FUNCTIONS                                          *cc-kokkai-functions*
+
+cc_kokkai#start({args})                              *cc_kokkai#start()*
+	Start a debate. {args} is a string in the same format as
+	the |:Kokkai| command (flags + topic). >
+	  call cc_kokkai#start('-r 3 猫vs犬')
+<
+cc_kokkai#stop()                                      *cc_kokkai#stop()*
+	Stop the current debate. Same as |:KokkaiStop|.
+
+cc_kokkai#status()                                  *cc_kokkai#status()*
+	Show current debate status. Same as |:KokkaiStatus|.
+
+==============================================================================
+OPTIONS                                              *cc-kokkai-options*
+
+                                            *g:cc_kokkai_max_rounds*
+g:cc_kokkai_max_rounds		(default: 3)
+	Default number of debate rounds. Overridden by -r flag.
+
+                                            *g:cc_kokkai_model*
+g:cc_kokkai_model		(default: '')
+	Model override passed to aistream.vim.
+
+                                            *g:cc_kokkai_max_turns*
+g:cc_kokkai_max_turns		(default: 1)
+	Max turns per AI call.
+
+                                            *g:cc_kokkai_poll_ms*
+g:cc_kokkai_poll_ms		(default: 500)
+	Polling interval in milliseconds.
+
+                                            *g:cc_kokkai_poll_timeout_ms*
+g:cc_kokkai_poll_timeout_ms	(default: 120000)
+	Maximum time (ms) to wait for an AI response before timing out.
+
+                                            *g:cc_kokkai_lang*
+g:cc_kokkai_lang		(default: 'ja')
+	Prompt language. 'ja' or 'en'.
+
+                                            *g:cc_kokkai_persona_pro*
+g:cc_kokkai_persona_pro		(default: '')
+	Default custom prompt for the pro (与党) side.
+	Inserted directly into the system prompt as-is.
+	Example: >
+	  let g:cc_kokkai_persona_pro = '昭和のベテラン議員'
+	  let g:cc_kokkai_persona_pro = '必ずデータを引用して論じること'
+<
+                                            *g:cc_kokkai_persona_con*
+g:cc_kokkai_persona_con		(default: '')
+	Default custom prompt for the con (野党) side.
+
+                                            *g:cc_kokkai_persona_judge*
+g:cc_kokkai_persona_judge	(default: '')
+	Default custom prompt for the judge (議長).
+
+==============================================================================
+LAYOUT                                                *cc-kokkai-layout*
+
+A new tab with 3 panes is created immediately when the debate starts.
+Each pane shows a placeholder ("準備中...") until the AI output arrives: >
+
+  +------------------+------------------+
+  |  与党 (賛成)     |  野党 (反対)     |
+  |  AIRun! follow-up|  AIRun! follow-up|
+  +------------------+------------------+
+  |            議長 (Judge)             |
+  +-------------------------------------+
+<
+==============================================================================
+EXAMPLES                                            *cc-kokkai-examples*
+
+Basic: >
+  :Kokkai 猫と犬、人類の最良の友はどちらか
+<
+With rounds: >
+  :Kokkai -r 5 カレーにじゃがいもは入れるべきか
+<
+With custom personas: >
+  :Kokkai -pro "関西弁の熱血議員" -con "ギャル語の新人議員" 朝ごはんはパンかご飯か
+<
+With custom prompts (output format, constraints, etc.): >
+  :Kokkai -pro "必ず箇条書きで論点を3つ挙げよ" -judge "各10点で採点せよ" AI是非
+<
+Full options: >
+  :Kokkai -r 4 -pro "昭和のおじさん議員" -con "Z世代の若手" -judge "厳格な元裁判官" 布団から出たくない権利を憲法に明記すべきか
+<
+English: >
+  :let g:cc_kokkai_lang = 'en'
+  :Kokkai -r 3 Tabs vs Spaces
+<
+==============================================================================
+REQUIREMENTS                                    *cc-kokkai-requirements*
+
+  - Vim 8.0+ or Neovim 0.5+
+  - aistream.vim (https://github.com/kis9a/aistream.vim)
+  - Claude Code CLI
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
